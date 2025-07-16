@@ -10,7 +10,7 @@ export class AsyncIterableSequencer<T> implements AsyncIterable<T> {
       const promise = new Promise<AnyIterable<T> | null>((resolve) => {
         this.resolve = (nextIterator) => {
           if (nextIterator !== null) {
-            resolve(combine(nextIterator, makePromiseIterator()));
+            resolve(flatten(nextIterator, makePromiseIterator()));
           } else {
             resolve(null);
           }
@@ -47,7 +47,7 @@ export class AsyncIterableSequencer<T> implements AsyncIterable<T> {
   }
 }
 
-async function* combine<T>(...iterators: AnyIterable<T>[]): Generator<T> {
+async function* flatten<T>(...iterators: AnyIterable<T>[]): Generator<T> {
   for (const iterator of iterators) {
     yield* iterator;
   }
