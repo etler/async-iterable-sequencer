@@ -4,19 +4,17 @@ type Generator<T> = AsyncGenerator<T, void, unknown>;
 export class AsyncIterableSequencer<T> implements AsyncIterable<T> {
   private resolve: (iterator: AnyIterable<T> | null) => void;
   private iterator: AsyncGenerator<T, void, unknown>;
-
   constructor() {
-    const makePromiseIterator = (): Generator<T> => {
+    const nextIterablePromiseGenerator = (): Generator<T> => {
       const promise = new Promise<AnyIterable<T> | null>((resolve) => {
         this.resolve = (nextIterator) => {
           if (nextIterator !== null) {
-            resolve(flatten(nextIterator, makePromiseIterator()));
+            resolve(flatten(nextIterator, nextIterablePromiseGenerator()));
           } else {
             resolve(null);
           }
         };
       });
-
       return (async function* () {
         const result = await promise;
         if (result !== null) {
@@ -27,7 +25,7 @@ export class AsyncIterableSequencer<T> implements AsyncIterable<T> {
     this.resolve = () => {
       throw new Error("IterableSequencer used before initialization");
     };
-    this.iterator = makePromiseIterator();
+    this.iterator = nextIterablePromiseGenerator();
   }
 
   push(iterator: AnyIterable<T> | null): void {

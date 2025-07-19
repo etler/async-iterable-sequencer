@@ -7,7 +7,7 @@
     "declarationMap": true,
     "esModuleInterop": true,
     "isolatedModules": true,
-    "lib": ["ESNext", "WebWorker"],
+    "lib": ["ESNext", "DOM.AsyncIterable"],
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "noFallthroughCasesInSwitch": true,
