@@ -1,51 +1,35 @@
 type AnyIterable<T> = AsyncIterable<T> | Iterable<T>;
-type Generator<T> = AsyncGenerator<T, void, unknown>;
 
-export class AsyncIterableSequencer<T> implements AsyncIterable<T> {
-  private resolve: (iterator: AnyIterable<T> | null) => void;
-  private iterator: AsyncGenerator<T, void, unknown>;
-  constructor() {
-    const nextIterablePromiseGenerator = (): Generator<T> => {
-      const promise = new Promise<AnyIterable<T> | null>((resolve) => {
-        this.resolve = (nextIterator) => {
-          if (nextIterator !== null) {
-            resolve(flatten(nextIterator, nextIterablePromiseGenerator()));
-          } else {
-            resolve(null);
-          }
-        };
-      });
-      return (async function* () {
-        const result = await promise;
-        if (result !== null) {
-          yield* result;
-        }
-      })();
+export function asyncIterableSequencer<T>(): {
+  sequence: AsyncGenerator<T>;
+  push: (iterator: AnyIterable<T> | null) => void;
+} {
+  let resolver: (iterator: AnyIterable<T> | null) => void;
+  const next = (): AsyncGenerator<T> => {
+    const { promise, resolve } = Promise.withResolvers<AnyIterable<T> | null>();
+    resolver = (nextIterator) => {
+      if (nextIterator !== null) {
+        resolve(flatten(nextIterator, next()));
+      } else {
+        resolve(null);
+      }
     };
-    this.resolve = () => {
-      throw new Error("IterableSequencer used before initialization");
+    const generator = async function* () {
+      const result = await promise;
+      if (result !== null) {
+        yield* result;
+      }
     };
-    this.iterator = nextIterablePromiseGenerator();
-  }
-
-  push(iterator: AnyIterable<T> | null): void {
-    this.resolve(iterator);
-  }
-
-  async next(): Promise<IteratorResult<T>> {
-    return this.iterator.next();
-  }
-
-  async throw(error?: unknown): Promise<IteratorResult<T>> {
-    return this.iterator.throw(error);
-  }
-
-  [Symbol.asyncIterator](): Generator<T> {
-    return this.iterator;
-  }
+    return generator();
+  };
+  const push = (iterator: AnyIterable<T> | null): void => {
+    resolver(iterator);
+  };
+  const sequence = next();
+  return { sequence, push };
 }
 
-async function* flatten<T>(...iterators: AnyIterable<T>[]): Generator<T> {
+async function* flatten<T>(...iterators: AnyIterable<T>[]): AsyncGenerator<T> {
   for (const iterator of iterators) {
     yield* iterator;
   }

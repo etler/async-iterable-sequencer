@@ -1,39 +1,39 @@
-import { AsyncIterableSequencer } from "@/index";
+import { asyncIterableSequencer } from "@/index";
 
-describe("AsyncIterableSequencer", () => {
+describe("asyncIterableSequencer", () => {
   it("should sequence syncronous and asyncronous data", async () => {
-    const sequencer = new AsyncIterableSequencer<number>();
-    sequencer.push([0].values());
-    sequencer.push([1, 2, 3].values());
-    sequencer.push([4, 5, 6].values());
+    const { sequence, push } = asyncIterableSequencer<number>();
+    push([0].values());
+    push([1, 2, 3].values());
+    push([4, 5, 6].values());
     setTimeout(() => {
-      sequencer.push(delayGenerator(13, 14, 15));
+      push(delayGenerator(13, 14, 15));
     }, 1);
-    sequencer.push(delayGenerator(7, 8, 9));
-    sequencer.push(delayGenerator(10, 11, 12));
-    sequencer.push(null);
+    push(delayGenerator(7, 8, 9));
+    push(delayGenerator(10, 11, 12));
+    push(null);
     let index = 0;
-    await expect(sequencer.next()).resolves.toEqual({
+    await expect(sequence.next()).resolves.toEqual({
       done: false,
       value: 0,
     });
-    for await (const item of sequencer) {
+    for await (const item of sequence) {
       expect(item).toEqual(++index);
     }
   });
   it("should not block streams", async () => {
-    const sequencer = new AsyncIterableSequencer<number>();
+    const { sequence, push } = asyncIterableSequencer<number>();
     let timeIndex = 0;
     let maxTime = 0;
     for (let index = 0; index < 10; index++) {
       const timing: number[] = new Array<number>(10).fill(0).map(() => timeIndex++);
-      sequencer.push(new DelayStream(...timing));
+      push(new DelayStream(...timing));
       maxTime = timing.reduce((total, value) => total + value, 0);
     }
-    sequencer.push(null);
+    push(null);
     let testIndex = 0;
     const startTime = Date.now();
-    for await (const item of sequencer) {
+    for await (const item of sequence) {
       expect(item).toEqual(testIndex++);
     }
     const totalTime = Date.now() - startTime;
