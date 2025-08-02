@@ -1,13 +1,13 @@
 # Async Iterable Sequencer
 
-A TypeScript library for dynamically sequencing multiple async iterables implementing the relay pattern. Push iterables to a sequencer and consume them in order as a single async iterable.
+A TypeScript library for dynamically sequencing multiple async iterables implementing the relay pattern. Chain iterables to a sequencer and consume them in order as a single async iterable.
 
 ## Features
 
 * **Dynamic composition**: Add iterables to the sequencer at runtime, even during consumption
 * **Memory efficient**: O(1) memory usage during consumption, independent of data volume
 * **Type-safe**: Seamless handling of both sync and async iterables
-* **Sequential processing**: Iterables are consumed in the order they were pushed
+* **Sequential processing**: Iterables are consumed in the order they were chained
 * **Broadly compatible**: Works with any async iterable including generators, arrays, and streams
 
 ## Installation
@@ -27,18 +27,18 @@ import { AsyncIterableSequencer } from 'async-iterable-buffer';
 
 const sequencer = new AsyncIterableSequencer<number>();
 
-// Push synchronous iterables
-sequencer.push([10, 20, 30].values());
+// Chain synchronous iterables
+sequencer.chain([10, 20, 30].values());
 
-// Push asynchronous iterables
-sequencer.push(async function* () {
+// Chain asynchronous iterables
+sequencer.chain(async function* () {
   yield 40;
   yield 50;
   yield 60;
 }());
 
 // Signal end of input
-sequencer.push(null);
+sequencer.chain(null);
 
 // Consume all values in order
 for await (const value of sequencer) {
@@ -48,17 +48,32 @@ for await (const value of sequencer) {
 
 ### Behavior
 
-The sequencer processes iterables in the order they were pushed. Each iterable is fully consumed before moving to the next one. Both synchronous and asynchronous iterables are supported seamlessly and can be pushed in any context.
+The sequencer processes iterables in the order they were chained. Each iterable is fully consumed before moving to the next one. Both synchronous and asynchronous iterables are supported seamlessly and can be chained in any context.
 
 ## API Reference
 
 ### Exports
 
-#### `AsyncIterableSequencer<T>`
+#### `asyncIterableSequencer<T>(): AsyncIterableSequencerReturn`
 
 A class that sequences multiple iterables and exposes them as a single async iterable.
 
 ### Types
+
+#### `AsyncIterableSequencerReturn`
+
+Type signature of returned object. Includes the `sequence` generator and `chain` function for adding iterables to the `sequence` chain.
+
+`sequence`: A generator that returns the chained iterable contents in order.
+
+`chain`: Chains an iterable to the sequencer. Pass `null` to signal the end of input and end the sequence chain.
+
+```typescript
+interface AsyncIterableSequencerReturn<T> {
+  sequence: AsyncGenerator<T>;
+  chain: Chain<T>;
+}
+```
 
 #### `AnyIterable<T>`
 
@@ -68,12 +83,18 @@ Type that accepts both sync and async iterables.
 type AnyIterable<T> = AsyncIterable<T> | Iterable<T>
 ```
 
-### Methods
+#### `Chainable<T>`
 
-#### `push(iterator: AnyIterable<T> | null): void`
+Types that can be called on chain. `null` ends the chain.
 
-Adds an iterable to the sequencer. Pass `null` to signal the end of input and close the sequencer.
+```typescript
+type Chainable<T> = AnyIterable<T> | null
+```
 
-#### `[Symbol.asyncIterator](): AsyncGenerator<T, void, unknown>`
+#### `Chain<T>`
 
-The sequencer itself is an async iterable, allowing it to be used with `for await` loops.
+Function signature for the chain function.
+
+```typescript
+type Chain<T> = (iterator: Chainable<T>) => void;
+```
