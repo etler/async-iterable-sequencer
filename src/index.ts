@@ -9,12 +9,12 @@ export interface AsyncIterableSequencerReturn<T> {
 export function asyncIterableSequencer<T>(): AsyncIterableSequencerReturn<T> {
   let resolver: Chain<T>;
   const next = (): AsyncGenerator<T> => {
-    const { promise, resolve } = Promise.withResolvers<Chainable<T>>();
+    const { promise, resolve } = Promise.withResolvers<AnyIterable<T>>();
     resolver = (nextIterator) => {
-      resolve(nextIterator && flatten(nextIterator, next()));
+      resolve(nextIterator ? flatten(nextIterator, next()) : empty());
     };
     const generator = async function* () {
-      yield* (await promise) ?? empty();
+      yield* await promise;
     };
     return generator();
   };
