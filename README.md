@@ -98,3 +98,10 @@ Function signature for the chain function.
 ```typescript
 type Chain<T> = (iterator: Chainable<T>) => void;
 ```
+
+## License
+
+[MIT][license] © [Tim Etler][author]
+
+[license]: LICENSE.md
+[author]: https://github.com/etler
