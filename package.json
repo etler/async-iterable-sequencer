@@ -1,7 +1,7 @@
 {
-  "name": "node-simple-library-template",
+  "name": "async-iterable-sequencer",
   "version": "0.0.0",
-  "repository": "github:etler/node-simple-library-template",
+  "repository": "github:etler/async-iterable-sequencer",
   "license": "MIT",
   "type": "module",
   "module": "dist/index.js",
