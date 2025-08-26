@@ -1,6 +1,6 @@
 {
   "name": "async-iterable-sequencer",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "repository": "github:etler/async-iterable-sequencer",
   "license": "MIT",
   "type": "module",
@@ -28,8 +28,8 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/node": "^24.0.6",
     "@eslint/js": "^9.21.0",
+    "@types/node": "^24.0.6",
     "eslint": "~9.21.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "~5.2.3",
