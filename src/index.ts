@@ -7,29 +7,27 @@ export interface AsyncIterableSequencerReturn<T> {
 }
 
 export function asyncIterableSequencer<T>(): AsyncIterableSequencerReturn<T> {
+  const queue: Promise<Chainable<T>>[] = [];
   let resolver: Chain<T>;
-  const next = (): AsyncGenerator<T> => {
-    const { promise, resolve } = Promise.withResolvers<AnyIterable<T>>();
+  const next = () => {
+    const { promise, resolve } = Promise.withResolvers<Chainable<T>>();
+    queue.push(promise);
     resolver = (nextIterator) => {
-      resolve(nextIterator ? flatten(nextIterator, next()) : empty());
+      next();
+      resolve(nextIterator);
     };
-    const generator = async function* () {
-      yield* await promise;
-    };
-    return generator();
   };
+  next();
+  const sequence = (async function* () {
+    let iterator: Chainable<T> | undefined;
+    while ((iterator = await queue.shift())) {
+      yield* iterator;
+    }
+  })();
   return {
-    sequence: next(),
+    sequence,
     chain: (iterator) => {
       resolver(iterator);
     },
   };
 }
-
-async function* flatten<T>(...iterators: AnyIterable<T>[]): AsyncGenerator<T> {
-  for (const iterator of iterators) {
-    yield* iterator;
-  }
-}
-
-function* empty() {}
