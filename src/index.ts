@@ -18,14 +18,13 @@ export function asyncIterableSequencer<T>(): AsyncIterableSequencerReturn<T> {
     };
   };
   next();
-  const sequence = (async function* () {
-    let iterator: Chainable<T> | undefined;
-    while ((iterator = await queue.shift())) {
-      yield* iterator;
-    }
-  })();
   return {
-    sequence,
+    sequence: (async function* () {
+      let iterator: Chainable<T> | undefined;
+      while ((iterator = await queue.shift())) {
+        yield* iterator;
+      }
+    })(),
     chain: (iterator) => {
       resolver(iterator);
     },
